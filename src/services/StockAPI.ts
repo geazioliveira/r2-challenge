@@ -27,88 +27,81 @@ export default class StockAPI {
 
   /**
    * Fetches the quote and company overview data for a given symbol.
-   * If no symbol is provided, the default symbol will be used.
-   * It can fetch data either from a mock API or a real API, depending on the configuration.
-   *
-   * @param {string} symbol - The stock symbol to fetch data for.
-   * @return {Promise<{quoteData: GlobalQuoteModel, companyOverview: CompanyOverviewModel}>} A promise that resolves with the quote data and company overview.
-   * @throws Will throw an error if data fetching fails.
    */
-  async getQuote(symbol: string): Promise<{
-    globalQuote: GlobalQuoteModel
-    companyOverview: CompanyOverviewModel
-  }> {
-    if (!symbol) {
-      symbol = this.defaultSymbol
-    }
-    // Use Mock api
+  async getQuote(symbol: string): Promise<StockData> {
+    const targetSymbol = symbol || this.defaultSymbol
+
     if (this.useMock) {
-      return {
-        globalQuote: globalQuoteMock,
-        companyOverview: companyOverviewMock,
-      }
+      console.log(`Using Mock Data for ${targetSymbol}`)
+      return this.fetchMockData()
     }
 
-    // Use real API
-    console.log(`Fetching data for ${symbol} from API`)
+    console.log(`Fetching data for ${targetSymbol} from API`)
     try {
-      const quoteData = await this.fetchQuoteData(symbol)
-      const companyOverview = await this.fetchCompanyOverview(symbol)
+      const [globalQuote, companyOverview] = await Promise.all([
+        this.fetchQuoteData(targetSymbol),
+        this.fetchCompanyOverview(targetSymbol),
+      ])
 
-      console.log(quoteData, companyOverview)
-      return { globalQuote: quoteData!, companyOverview: companyOverview! }
+      if (!globalQuote || !companyOverview) {
+        throw new Error('Incomplete data received from API')
+      }
+
+      return { globalQuote, companyOverview }
     } catch (error) {
-      console.log(error)
+      console.error(`Error fetching stock data for ${targetSymbol}:`, error)
       throw error
     }
   }
 
-  /**
-   * Fetches quote data for the given stock symbol from an external API.
-   *
-   * @param {string} symbol - The stock symbol for which to retrieve the quote data.
-   * @return {Promise<GlobalQuoteModel | undefined>} A promise that resolves to the quote data transformed into a `GlobalQuoteModel`.
-   * @throws {Error} Throws an error if the HTTP response status is not OK.
-   */
   private async fetchQuoteData(
     symbol: string,
   ): Promise<GlobalQuoteModel | undefined> {
-    const url = `${this.baseURL}?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${this.getApiKey()}`
-
-    const response = await fetch(url)
-
-    if (!response.ok) {
-      throw new Error('HTTP error! status: ' + response.status)
-    }
-
-    return globalQuoteTransformation(await response.json())
+    const url = this.buildUrl('GLOBAL_QUOTE', symbol)
+    const data = await this.fetchJson(url)
+    return globalQuoteTransformation(data)
   }
 
-  /**
-   * Fetches the company overview for a given stock symbol.
-   *
-   * @param {string} symbol - The stock symbol for the company whose overview is to be fetched.
-   * @return {Promise<CompanyOverviewModel | undefined>} A promise that resolves to the transformed company overview data.
-   */
   private async fetchCompanyOverview(
     symbol: string,
   ): Promise<CompanyOverviewModel | undefined> {
-    try {
-      const url = `${this.baseURL}?function=OVERVIEW&symbol=${symbol}&apikey=${this.getApiKey()}`
-
-      const response = await fetch(url)
-
-      if (!response.ok) {
-        throw new Error('HTTP error! status: ' + response.status)
-      }
-
-      return companyOverviewTransformation(await response.json())
-    } catch (error) {
-      console.log(error)
-    }
+    const url = this.buildUrl('OVERVIEW', symbol)
+    const data = await this.fetchJson(url)
+    return companyOverviewTransformation(data)
   }
 
-  private getApiKey() {
-    return this.apiKeys[Math.floor(Math.random() * this.apiKeys.length)]
+  private buildUrl(functionName: string, symbol: string): string {
+    return `${this.baseURL}?function=${functionName}&symbol=${symbol}&apikey=${this.apiKey}`
+  }
+
+  private async fetchJson(url: string): Promise<any> {
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const json = await response.json()
+
+    // Check for API limit or error messages often returned by Alpha Vantage
+    if (json['Note'] || json['Information']) {
+      console.warn('API Message:', json['Note'] || json['Information'])
+    }
+    if (json['Error Message']) {
+      throw new Error(json['Error Message'])
+    }
+
+    return json
+  }
+
+  private getRandomDefaultKey() {
+    const keys = stockApiConfig.apiKeys
+    return keys[Math.floor(Math.random() * keys.length)]
+  }
+
+  private async fetchMockData(): Promise<StockData> {
+    const response = await fetch('http://localhost:5173/public/mock.data.json')
+    if (!response.ok) {
+      throw new Error(`Failed to fetch mock data: ${response.statusText}`)
+    }
+    return response.json() as Promise<StockData>
   }
 }
