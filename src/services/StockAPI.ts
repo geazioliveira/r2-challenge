@@ -1,19 +1,28 @@
 import { stockApiConfig } from '../core/config/stockApi.config.ts'
-import { globalQuoteMock } from '../core/mocks/global-quote.mock.ts'
-import { companyOverviewMock } from '../core/mocks/company-overview.mock.ts'
 import type { GlobalQuoteModel } from '../core/models/global-quote.model.ts'
 import { globalQuoteTransformation } from '../core/utils/global-quote.transformation.ts'
 import type { CompanyOverviewModel } from '../core/models/company-overview.model.ts'
 import { companyOverviewTransformation } from '../core/utils/company-overview.transformation.ts'
 
+export interface StockAPIConfig {
+  apiKey?: string
+  useMock?: boolean
+}
+
+export interface StockData {
+  globalQuote: GlobalQuoteModel
+  companyOverview: CompanyOverviewModel
+}
+
 export default class StockAPI {
-  private readonly apiKeys = stockApiConfig.apiKeys
   private readonly baseURL = stockApiConfig.baseURL
   private readonly defaultSymbol = 'MSFT'
-  private readonly useMock: boolean = true
+  private readonly apiKey: string
+  private readonly useMock: boolean
 
-  constructor() {
-    // this.apiKey = this.apiKeys[Math.floor(Math.random() * this.apiKeys.length)]
+  constructor(config: StockAPIConfig = {}) {
+    this.apiKey = config.apiKey || this.getRandomDefaultKey()
+    this.useMock = config.useMock ?? false
   }
 
   /**
