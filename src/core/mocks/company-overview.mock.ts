@@ -168,4 +168,5 @@ export const createCompanyOverviewMock = (
   }
 }
 
-export const companyOverviewMock = createCompanyOverviewMock()
+export const companyOverviewMock: CompanyOverviewModel =
+  createCompanyOverviewMock()

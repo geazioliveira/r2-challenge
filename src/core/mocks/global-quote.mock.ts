@@ -43,9 +43,11 @@ export const createGlobalQuoteMock = (
     latestTradingDay: faker.date.recent({ days: 5 }),
     previousClose,
     change,
+    indicator: faker.helpers.arrayElement(['up', 'down', 'neutral']),
     changePercent: `${change >= 0 ? '' : ''}${changePercent}%`,
+    changeAbsolute: Math.abs(change),
     ...overrides,
   }
 }
 
-export const globalQuoteMock = createGlobalQuoteMock()
+export const globalQuoteMock: GlobalQuoteModel = createGlobalQuoteMock()
