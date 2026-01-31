@@ -37,21 +37,40 @@ export default class StockQuote extends HTMLElement {
     if (!this.companyOverview || !this.globalQuote) return
     if (this.shadowRoot === null) return
 
+    console.log('Rendering stock quote...')
+
     const { symbol, name } = this.companyOverview
-    const { price } = this.globalQuote
+    // const { price } = this.globalQuote
 
     this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+           display: block;
+           font-family: var(--stocks-font-family);
+        }
+        .stock-header {
+           display: flex;
+           flex-direction: column;
+           justify-content: center;
+           align-items: flex-start;
+        }
+        .stock-info h2 {
+           margin: 0;
+           font-size: 1.5rem;
+           color: var(--stocks-primary-color);
+        }
+        .stock-info p {
+           margin: 0;
+           font-size: 0.875rem;
+           color: var(--stocks-color-a60);
+        }
+      </style>
       <div class="stock-header">
         <div class="stock-info">
           <h2>${symbol}</h2>
           <p>${name}</p>
         </div>
-        <div class="price">$${price?.toFixed(2)}</div>
       </div>
     `
   }
-}
-
-if (!customElements.get('stock-quote')) {
-  customElements.define('stock-quote', StockQuote)
 }
