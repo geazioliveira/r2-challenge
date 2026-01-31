@@ -1,28 +1,95 @@
-import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
 import StockAPI from './services/StockAPI.ts'
+import StockWidget from './components/StockWidget.ts'
+import type { GlobalQuoteModel } from './core/models/global-quote.model.ts'
+import type { CompanyOverviewModel } from './core/models/company-overview.model.ts'
 
-const stockApi = new StockAPI()
-stockApi.getQuote('MSFT').then((data) => console.log(data))
+export type StockSnapshotProp = {
+  containerId: string
+  symbol: string
+  apiKey: string
+}
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
+export class StocksSnapshot {
+  apiKey: string
+  private containerId: string
+  private symbol: string
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+  private constructor(config: StockSnapshotProp) {
+    this.validateConfig(config)
+    this.containerId = config.containerId
+    this.symbol = config.symbol
+    this.apiKey = config.apiKey
+  }
+
+  static init(config: StockSnapshotProp): Promise<StocksSnapshot> {
+    try {
+      const instance = new StocksSnapshot(config)
+      return instance.load().then(() => instance)
+    } catch (error) {
+      return Promise.reject(error)
+    }
+  }
+
+  private validateConfig(config: StockSnapshotProp) {
+    if (!config.containerId) throw new Error('containerId is required')
+    if (!config.symbol) throw new Error('symbol is required')
+    if (!config.apiKey) throw new Error('apiKey is required')
+    if (config.apiKey.length !== 32) throw new Error('Invalid API key')
+  }
+
+  private async load() {
+    try {
+      const data = await this.fetchStockData()
+      this.createAndAppendContainer(data)
+    } catch (error) {
+      console.error('Failed to initialize stock snapshot:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Fetches stock data for the configured symbol
+   * @returns {Promise<Object>} Stock data
+   */
+  private async fetchStockData() {
+    try {
+      // TODO: Pass apiKey to StockAPI if it supports it
+      console.debug(
+        `Fetching stock data for ${this.symbol} with API key length ${this.apiKey.length}`,
+      )
+      const stockApi = new StockAPI()
+      const data = await stockApi.getQuote(this.symbol)
+      console.log('Stock data fetched:', data)
+      return data
+    } catch (error) {
+      console.error('Failed to fetch stock data:', error)
+      throw error
+    }
+  }
+
+  private createAndAppendContainer(data: {
+    globalQuote: GlobalQuoteModel
+    companyOverview: CompanyOverviewModel
+  }) {
+    if (!customElements.get('stock-widget')) {
+      customElements.define('stock-widget', StockWidget)
+    }
+
+    const widgetElement = document.createElement('stock-widget') as StockWidget
+    widgetElement.data = data
+
+    const domElement = document.getElementById(this.containerId)
+
+    if (domElement) {
+      domElement.appendChild(widgetElement)
+    } else {
+      throw new Error(
+        `Container element with ID '${this.containerId}' not found`,
+      )
+    }
+  }
+}
+
+if (typeof window !== 'undefined') {
+  ;(window as any).StocksSnapshot = StocksSnapshot
+}

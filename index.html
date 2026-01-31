@@ -15,10 +15,24 @@
 
   </head>
   <body>
-    <script src="/src/main.ts" type="module"></script>
-    <iframe src="https://www.squarespace.com/website-design"></iframe>
+  <!-- The Container -->
+  <div id="stocks-widget"></div>
 
-    <div id="app"></div>
+  <!-- The Widget Script -->
+  <script src="./dist/stocks-snapshot.umd.js"></script>
 
+  <!-- Initialization -->
+  <script>
+    StocksSnapshot.init({
+      containerId: 'stocks-widget',
+      symbol: 'MSFT',
+      apiKey: 'YOUR_API_KEY_WITH_32_CHARS_MINIM' // API Key is validated but passed through
+    }).then(() => {
+      console.log('Stocks widget ready');
+    }).catch(err => {
+      console.error('Failed to load widget:', err);
+    });
+  </script>
+<!--    <iframe src="https://www.squarespace.com/website-design"></iframe>-->
   </body>
 </html>
