@@ -55,13 +55,6 @@ export class StocksSnapshot {
   private async fetchStockData() {
     try {
       // TODO: Pass apiKey to StockAPI if it supports it
-      console.debug(
-        `Fetching stock data for ${this.symbol} with API key length ${this.apiKey.length}`,
-      )
-      const stockApi = new StockAPI({ apiKey: this.apiKey })
-      const data = await stockApi.getQuote(this.symbol)
-      console.log('Stock data fetched:', data)
-      return data
       const stockApi = new StockAPI({ apiKey: this.apiKey, useMock: true })
       return await stockApi.getQuote(this.symbol)
     } catch (error) {
@@ -74,7 +67,6 @@ export class StocksSnapshot {
     globalQuote: GlobalQuoteModel
     companyOverview: CompanyOverviewModel
   }) {
-    console.log('Creating stock snapshot container...')
     if (!customElements.get('stock-widget')) {
       customElements.define('stock-widget', StockWidget)
     }

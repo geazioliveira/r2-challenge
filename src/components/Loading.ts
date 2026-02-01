@@ -11,7 +11,6 @@ export default class Loading extends HTMLElement {
   render() {
     if (this.shadowRoot === null) return
 
-    console.log('Rendering loading spinner...')
     this.shadowRoot.innerHTML = `
         <style>
           .loader {

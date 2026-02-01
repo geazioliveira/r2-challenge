@@ -37,10 +37,7 @@ export default class StockQuote extends HTMLElement {
     if (!this.companyOverview || !this.globalQuote) return
     if (this.shadowRoot === null) return
 
-    console.log('Rendering stock quote...')
-
     const { symbol, name } = this.companyOverview
-    // const { price } = this.globalQuote
 
     this.shadowRoot.innerHTML = `
       <style>

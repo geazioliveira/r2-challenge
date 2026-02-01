@@ -32,16 +32,12 @@ export default class StockAPI {
     const targetSymbol = symbol || this.defaultSymbol
 
     if (this.useMock) {
-      console.log(`Using Mock Data for ${targetSymbol}`)
       return this.fetchMockData()
     }
 
-    console.log(`Fetching data for ${targetSymbol} from API`)
     try {
-      const [globalQuote, companyOverview] = await Promise.all([
-        this.fetchQuoteData(targetSymbol),
-        this.fetchCompanyOverview(targetSymbol),
-      ])
+      const globalQuote = await this.fetchQuoteData(targetSymbol)
+      const companyOverview = await this.fetchCompanyOverview(targetSymbol)
 
       if (!globalQuote || !companyOverview) {
         throw new Error('Incomplete data received from API')
