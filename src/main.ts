@@ -63,6 +63,8 @@ export class StocksSnapshot {
       const data = await stockApi.getQuote(this.symbol)
       console.log('Stock data fetched:', data)
       return data
+      const stockApi = new StockAPI({ apiKey: this.apiKey, useMock: true })
+      return await stockApi.getQuote(this.symbol)
     } catch (error) {
       console.error('Failed to fetch stock data:', error)
       throw error
