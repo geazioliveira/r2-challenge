@@ -98,10 +98,16 @@ export default class StockAPI {
   }
 
   private async fetchMockData(): Promise<StockData> {
-    const response = await fetch('http://localhost:5173/public/mock.data.json')
-    if (!response.ok) {
-      throw new Error(`Failed to fetch mock data: ${response.statusText}`)
-    }
-    return response.json() as Promise<StockData>
+    const companyOverview = await this.fetchJson(
+      'http://localhost:5173/public/company-overview.data.json',
+    )
+    const globalQuote = await this.fetchJson(
+      'http://localhost:5173/public/global-quote.data.json',
+    )
+
+    return {
+      globalQuote: globalQuoteTransformation(globalQuote),
+      companyOverview: companyOverviewTransformation(companyOverview),
+    } as unknown as Promise<StockData>
   }
 }
