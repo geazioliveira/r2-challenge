@@ -21,7 +21,6 @@ export const globalQuoteTransformation = (
   quoteData: Record<string, any>,
 ): GlobalQuoteModel => {
   const change = parseFloat(quoteData['09. change'])
-  const changePercent = quoteData['10. change percent'].replace('%', '')
 
   // Determine up/down indicator
   let indicator = 'neutral'
@@ -30,15 +29,18 @@ export const globalQuoteTransformation = (
   } else if (change < 0) {
     indicator = 'down'
   }
+  const lastTradingDay = new Date(
+    quoteData['07. latest trading day'] + 'T12:00:00Z',
+  )
 
   return GlobalQuoteSchema.parse({
     symbol: quoteData['01. symbol'],
     price: parseFloat(quoteData['05. price']),
     change: change,
-    changePercent: changePercent,
+    changePercent: quoteData['10. change percent'],
     changeAbsolute: Math.abs(change), // Absolute value of change
     indicator: indicator, // 'up', 'down', or 'neutral'
-    latestTradingDay: quoteData['07. latest trading day'],
+    latestTradingDay: lastTradingDay,
     open: parseFloat(quoteData['02. open']),
     high: parseFloat(quoteData['03. high']),
     low: parseFloat(quoteData['04. low']),
