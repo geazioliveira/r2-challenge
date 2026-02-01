@@ -36,7 +36,6 @@ export class StocksSnapshot {
     if (!config.containerId) throw new Error('containerId is required')
     if (!config.symbol) throw new Error('symbol is required')
     if (!config.apiKey) throw new Error('apiKey is required')
-    if (config.apiKey.length !== 32) throw new Error('Invalid API key')
   }
 
   private async load() {
