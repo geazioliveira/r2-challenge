@@ -97,14 +97,14 @@ if (typeof window !== 'undefined') {
   ;(window as any).StocksSnapshot = StocksSnapshot
 }
 
-StocksSnapshot.init({
-  containerId: 'stocks-widget',
-  symbol: 'MSFT',
-  apiKey: 'YOUR_API_KEY_WITH_32_CHARS_MINIM', // API Key is validated but passed through
-})
-  .then(() => {
-    console.log('Stocks widget ready')
-  })
-  .catch((err) => {
-    console.error('Failed to load widget:', err)
-  })
+// StocksSnapshot.init({
+//   containerId: 'stocks-widget',
+//   symbol: 'MSFT',
+//   apiKey: '257VAR5ZNM7XEFQ9', // API Key is validated but passed through
+// })
+//   .then(() => {
+//     console.log('Stocks widget ready')
+//   })
+//   .catch((err) => {
+//     console.error('Failed to load widget:', err)
+//   })
