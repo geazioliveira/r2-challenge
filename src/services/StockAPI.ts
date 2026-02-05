@@ -3,6 +3,7 @@ import type { GlobalQuoteModel } from '../core/models/global-quote.model.ts'
 import { globalQuoteTransformation } from '../core/utils/global-quote.transformation.ts'
 import type { CompanyOverviewModel } from '../core/models/company-overview.model.ts'
 import { companyOverviewTransformation } from '../core/utils/company-overview.transformation.ts'
+import { ObservabilityManager } from '../core/observability/index.ts'
 
 export interface StockAPIConfig {
   apiKey?: string
@@ -31,23 +32,31 @@ export default class StockAPI {
   async getQuote(symbol: string): Promise<StockData> {
     const targetSymbol = symbol || this.defaultSymbol
 
-    if (this.useMock) {
-      return this.fetchMockData()
-    }
+    return ObservabilityManager.getInstance().withSpan(
+      'stocks.get_quote',
+      async (span) => {
+        span.setAttribute('symbol', targetSymbol)
+        span.setAttribute('mock', this.useMock)
 
-    try {
-      const globalQuote = await this.fetchQuoteData(targetSymbol)
-      const companyOverview = await this.fetchCompanyOverview(targetSymbol)
+        if (this.useMock) {
+          return this.fetchMockData()
+        }
 
-      if (!globalQuote || !companyOverview) {
-        throw new Error('Incomplete data received from API')
-      }
+        try {
+          const globalQuote = await this.fetchQuoteData(targetSymbol)
+          const companyOverview = await this.fetchCompanyOverview(targetSymbol)
 
-      return { globalQuote, companyOverview }
-    } catch (error) {
-      console.error(`Error fetching stock data for ${targetSymbol}:`, error)
-      throw error
-    }
+          if (!globalQuote || !companyOverview) {
+            throw new Error('Incomplete data received from API')
+          }
+
+          return { globalQuote, companyOverview }
+        } catch (error) {
+          console.error(`Error fetching stock data for ${targetSymbol}:`, error)
+          throw error
+        }
+      },
+    )
   }
 
   private async fetchQuoteData(
@@ -71,21 +80,36 @@ export default class StockAPI {
   }
 
   private async fetchJson(url: string): Promise<any> {
-    const response = await fetch(url)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const json = await response.json()
+    return ObservabilityManager.getInstance().withSpan(
+      'stocks.fetch_json',
+      async (span) => {
+        // Avoid logging full URL if it contains API key?
+        // Ideally sanitize it, but for simplicity we assume url is safe enough or user key is public
+        span.setAttribute('url.full', url.replace(/apikey=[^&]+/, 'apikey=***'))
 
-    // Check for API limit or error messages often returned by Alpha Vantage
-    if (json['Note'] || json['Information']) {
-      console.warn('API Message:', json['Note'] || json['Information'])
-    }
-    if (json['Error Message']) {
-      throw new Error(json['Error Message'])
-    }
+        const response = await fetch(url)
 
-    return json
+        span.setAttribute('http.status_code', response.status)
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const json = await response.json()
+
+        // Check for API limit or error messages often returned by Alpha Vantage
+        if (json['Note'] || json['Information']) {
+          console.warn('API Message:', json['Note'] || json['Information'])
+          span.addEvent('api_message', {
+            message: json['Note'] || json['Information'],
+          })
+        }
+        if (json['Error Message']) {
+          throw new Error(json['Error Message'])
+        }
+
+        return json
+      },
+    )
   }
 
   private getRandomDefaultKey() {
@@ -95,10 +119,10 @@ export default class StockAPI {
 
   private async fetchMockData(): Promise<StockData> {
     const companyOverview = await this.fetchJson(
-      'http://localhost:5173/public/company-overview.data.json',
+      'http://localhost:3000/company-overview',
     )
     const globalQuote = await this.fetchJson(
-      'http://localhost:5173/public/global-quote.data.json',
+      'http://localhost:3000/global-quote',
     )
 
     return {
