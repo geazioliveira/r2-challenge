@@ -4,8 +4,8 @@ export const fontUrl =
 export const variables = `
     --stocks-font-family: "SN Pro", sans-serif;
     
-    --stocks-primary-color: #6f133f;
-    --stocks-second-color: #6f133f;
+    --stocks-primary-color: #000000;
+    --stocks-second-color: #333333;
     
     --stocks-positive: #22c55e;
     --stocks-negative: #ef4444;

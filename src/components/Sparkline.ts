@@ -42,18 +42,23 @@ export default class Sparkline extends HTMLElement {
     `
   }
 
-  // Generate a mock path since we don't have historical data
+  /**
+   * Generates a mock path string representing a fluctuating line
+   * within the given dimensions.
+   *
+   * @param {number} width - The total width of the path to generate.
+   * @param {number} height - The total height of the path to generate.
+   * @return {string} A string representing the generated mock path.
+   */
   private generateMockPath(width: number, height: number): string {
     let path = `M 0,${height / 2} `
-    const steps = 10
+    const steps = 30
     const stepX = width / steps
     let currentY = height / 2
 
     for (let i = 1; i <= steps; i++) {
-      // Random fluctuation
       const delta = (Math.random() - 0.5) * (height * 0.8)
 
-      // Force trend at the end
       if (i > steps - 3) {
         if (this._isPositive && delta > 0) currentY -= Math.abs(delta)
         else if (!this._isPositive && delta < 0) currentY += Math.abs(delta)
@@ -62,7 +67,6 @@ export default class Sparkline extends HTMLElement {
         currentY += delta
       }
 
-      // Clamp
       currentY = Math.max(2, Math.min(height - 2, currentY))
 
       path += `L ${i * stepX},${currentY} `

@@ -10,16 +10,17 @@ import {
  * and maps it to predefined fields of the `GlobalQuoteModel`. It calculates additional
  * derived values such as absolute change and determines the price movement indicator.
  *
- * @param {Record<string, any>} quoteData - Raw quote data with key-value pairs
  * representing financial metrics.
  *
  * @returns {GlobalQuoteModel} A structured object containing the transformed and parsed
  * financial data, including price, change, percentage change, trading indicators, and
  * other metrics.
+ * @param globalQuote
  */
 export const globalQuoteTransformation = (
-  quoteData: Record<string, any>,
+  globalQuote: Record<string, any>,
 ): GlobalQuoteModel => {
+  const quoteData = globalQuote['Global Quote']
   const change = parseFloat(quoteData['09. change'])
 
   // Determine up/down indicator

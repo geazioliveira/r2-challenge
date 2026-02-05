@@ -4,6 +4,7 @@ import { globalQuoteTransformation } from '../core/utils/global-quote.transforma
 import type { CompanyOverviewModel } from '../core/models/company-overview.model.ts'
 import { companyOverviewTransformation } from '../core/utils/company-overview.transformation.ts'
 import { ObservabilityManager } from '../core/observability/index.ts'
+import { delay } from '../core/utils'
 
 export interface StockAPIConfig {
   apiKey?: string
@@ -44,6 +45,7 @@ export default class StockAPI {
 
         try {
           const globalQuote = await this.fetchQuoteData(targetSymbol)
+          await delay(1500)
           const companyOverview = await this.fetchCompanyOverview(targetSymbol)
 
           if (!globalQuote || !companyOverview) {
