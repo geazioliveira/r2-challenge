@@ -55,6 +55,16 @@ export default class StockQuote extends HTMLElement {
            margin: 0;
            font-size: 1.5rem;
            color: var(--stocks-primary-color);
+           cursor: pointer;
+           transition: opacity 0.2s ease;
+        }
+        .stock-info h2:hover {
+           opacity: 0.7;
+        }
+        .stock-info h2:focus-visible {
+           outline: 2px solid var(--stocks-primary-color);
+           outline-offset: 2px;
+           border-radius: 4px;
         }
         .stock-info p {
            margin: 0;
@@ -64,10 +74,35 @@ export default class StockQuote extends HTMLElement {
       </style>
       <div class="stock-header">
         <div class="stock-info">
-          <h2>${symbol}</h2>
+          <h2 tabindex="0" role="button" aria-label="View ${symbol} full quote">${symbol}</h2>
           <p>${name}</p>
         </div>
       </div>
     `
+
+    // Attach click handler
+    const symbolElement = this.shadowRoot.querySelector('h2')
+    if (symbolElement) {
+      symbolElement.addEventListener('click', () => this.handleSymbolClick())
+      symbolElement.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          this.handleSymbolClick()
+        }
+      })
+    }
+  }
+
+  private handleSymbolClick() {
+    if (!this.companyOverview) return
+
+    // Dispatch custom event that bubbles through Shadow DOM
+    const event = new CustomEvent('symbol-click', {
+      detail: { symbol: this.companyOverview.symbol },
+      bubbles: true,
+      composed: true, // Required to cross Shadow DOM boundary
+    })
+
+    this.dispatchEvent(event)
   }
 }

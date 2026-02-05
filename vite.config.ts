@@ -6,7 +6,7 @@ export default defineConfig({
     lib: {
       entry: 'src/main.ts',
       name: 'StocksSnapshot',
-      fileName: (format) => `stocks-snapshot.${format}.js`,
+      fileName: (format) => `stocks.bundle.${format}.js`,
     },
     rollupOptions: {},
   },
